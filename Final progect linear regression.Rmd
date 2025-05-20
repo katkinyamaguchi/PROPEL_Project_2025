@@ -1,0 +1,81 @@
+---
+title: "Linear Regression of Meteorite Mass and Year"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+install.packages("ggpubr")
+library(ggpubr)
+```
+
+```{r}
+meteorites <- read_csv("meteorite_landings.csv") %>% drop_na() 
+data <- meteorites %>%
+  select(
+    Year = year,
+    Mass = mass
+  ) %>%
+  filter(!is.na(Year), !is.na(Mass), Mass > 0, Year > 0)
+glimpse(data)
+```
+
+```{r}
+summary(data)
+```
+
+```{r}
+correlation_matrix <- data %>%
+  select(Year, Mass) %>%
+  cor()
+correlation_matrix
+```
+
+```{r}
+model <- lm(Mass ~ Year, data = data)
+r_squared <- summary(model)$r.squared
+p_value <- summary(model)$coefficients[2, 4]
+label_text <- paste("R² = ", round(r_squared, 3), "\np = ", round(p_value, 3))
+summary(model)
+```
+
+```{r}
+p2 <- ggplot(data, aes(x = Year, y = Mass)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(
+    title = "Meteorite Mass vs. Year",
+    x = "Year",
+    y = "Mass (grams)"
+  ) +
+   annotate("text", x=700, y=5e+07, label = label_text, size = 5, color = "black") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15), axis.title.y = element_text(hjust = 0.5, size = 13), axis.title.x = element_text(hjust = 0.5, size = 13))
+ggsave("Meteorite_Mass_vs_Year.png", plot = p2, width = 8, height = 5, dpi = 300)
+```
+
+```{r}
+filtered_data <- data %>%
+  filter(Mass < quantile(Mass, 0.99))
+model_filtered <- lm(Mass ~ Year, data = filtered_data)
+r_squared <- summary(model_filtered)$r.squared
+p_value <- summary(model_filtered)$coefficients[2, 4]
+label_text_filtered <- paste("R² = ", round(r_squared, 3), "\np = ", round(p_value, 3))
+summary(model_filtered)
+range(filtered_data$Year)
+range(filtered_data$Mass)
+```
+
+```{r}
+p3 <- ggplot(filtered_data, aes(x = Year, y = Mass)) +
+  geom_point(alpha = 0.3, color = "gray") +
+  geom_point(data = filtered_data, aes(x = Year, y = Mass), color = "blue") +
+  geom_smooth(data = filtered_data, method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Meteorite Mass vs Year (With Outliers Removed)",
+    x = "Year",
+    y = "Mass (grams)"
+  ) +
+  annotate("text", x=700, y=5e+04, label = label_text_filtered, size = 5, color = "black") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15), axis.title.y = element_text(hjust = 0.5, size = 13), axis.title.x = element_text(hjust = 0.5, size = 13))
+ggsave("Meteorite_Mass_vs_Year_With_Outliers_Removed.png", plot = p3, width = 8, height = 5, dpi = 300)
+```
+

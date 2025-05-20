@@ -1,0 +1,37 @@
+---
+title: "Meteorite Mass By Hemisphere"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+
+data <- read.csv("Meteorite_Landings.csv")
+
+p <- data %>%
+  filter(year >= 860, year <= 2016) %>%
+  filter(reclong >= -180, reclong <= 180, reclat != 0 | reclong != 0) %>%
+  filter(!is.na(reclat), !is.na(mass), mass > 0) %>%
+  mutate(Hemisphere = factor(
+    if_else(reclat >= 0, "Northern", "Southern"),
+    levels = c("Southern", "Northern")
+  )) %>%
+  ggplot(aes(y = Hemisphere, x = mass, fill = Hemisphere)) +
+  geom_violin(trim = FALSE, alpha = 0.6) +
+  stat_summary(fun = mean, geom = "crossbar", width = 0.5, color = "black") +
+  scale_x_log10(labels = scales::comma) +
+  labs(
+    title = "Log-Scaled Meteorite Mass by Hemisphere",
+    x = expression("Mass (log"[10]*" grams)"),
+    y = "Hemisphere"
+  ) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA)
+  )
+
+ggsave("meteorite_mass_violin_final.png", plot = p, width = 8, height = 5, dpi = 300)
+```
+
