@@ -60,8 +60,6 @@ r_squared <- summary(model_filtered)$r.squared
 p_value <- summary(model_filtered)$coefficients[2, 4]
 label_text_filtered <- paste("R² = ", round(r_squared, 3), "\np = ", round(p_value, 3))
 summary(model_filtered)
-range(filtered_data$Year)
-range(filtered_data$Mass)
 ```
 
 ```{r}
